@@ -5,6 +5,7 @@ import type { TarotCard } from '@/types/tarot';
 import PageStateView from '@/components/PageStateView';
 import CardThumb from '@/components/CardThumb';
 import CardDeckPicker from '@/components/CardDeckPicker';
+import BannerAd from '@/components/BannerAd';
 import { spacingPx } from '@/design/tokens';
 import type { PageState } from '@/types/pageState';
 import { GptTarotService } from '@/services/gptTarot';
@@ -349,6 +350,9 @@ export default function AskPage() {
           <Button color="dark" variant="weak" display="block" onClick={handleReset} style={{ width: '100%' }}>
             다른 질문하기
           </Button>
+          <div style={{ width: '100%' }}>
+            <BannerAd />
+          </div>
         </div>
       ) : null}
 

@@ -4,6 +4,7 @@ import { Button, Paragraph } from '@toss/tds-mobile';
 import { useDailyCard } from '@/hooks/useDailyCard';
 import PageStateView from '@/components/PageStateView';
 import CardThumb from '@/components/CardThumb';
+import BannerAd from '@/components/BannerAd';
 import { spacingPx } from '@/design/tokens';
 import type { PageState } from '@/types/pageState';
 import type { TarotCard } from '@/types/tarot';
@@ -14,7 +15,7 @@ import { getHistory, getShareRewardCount, updateHistoryGptDetail, useShareReward
 type DetailLocationState = { fromHistory?: true; card: TarotCard; date: string; question?: string | null } | null;
 
 export default function DetailPage() {
-  const { card: dailyCard, unlocked, unlock, today } = useDailyCard();
+  const { card: dailyCard, today } = useDailyCard();
   const location = useLocation();
   const navigate = useNavigate();
   const stateFromHistory = (location.state as DetailLocationState);
@@ -75,26 +76,9 @@ export default function DetailPage() {
     );
   }
 
-  if (!isFromHistory && !unlocked) {
-    return (
-      <div className="detail-locked" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: spacingPx('xl'), paddingTop: spacingPx('xxxl'), textAlign: 'center' }}>
-        <span style={{ fontSize: spacingPx('xxxxl') }} aria-hidden>🔒</span>
-        <Paragraph typography="t5" style={{ margin: 0 }}>
-          <Paragraph.Text fontWeight="bold">상세 해석이 잠겨 있습니다</Paragraph.Text>
-        </Paragraph>
-        <Paragraph typography="t6" style={{ margin: 0 }}>
-          <Paragraph.Text color="gray">광고를 시청하면 오늘의 상세 해석, 조언, 행운 정보를 볼 수 있습니다.</Paragraph.Text>
-        </Paragraph>
-        <Button color="primary" variant="fill" display="block" onClick={() => unlock()}>
-          광고 보고 상세 해석 보기
-        </Button>
-      </div>
-    );
-  }
-
   if (!card) return null;
 
-  /* 해제 후: 카드 정보 → 상세 해석 → 조언 → 행운 정보 (홈 버튼·AI 해석 제거) */
+  /* 카드 정보 → 상세 해석 → 조언 → 행운 정보 → 추가 해석(광고 시청 시) */
   return (
     <div className="detail-unlocked" style={{ display: 'flex', flexDirection: 'column', gap: spacingPx('lg') }}>
       {/* 1. 카드 정보 */}
@@ -269,6 +253,10 @@ export default function DetailPage() {
       <Paragraph typography="t7" style={{ textAlign: 'center' }}>
         <Paragraph.Text color="gray">오락 목적이며, 결정의 근거로 사용할 수 없습니다. 면책 조항은 설정에서 확인할 수 있습니다.</Paragraph.Text>
       </Paragraph>
+
+      <div style={{ width: '100%' }}>
+        <BannerAd />
+      </div>
     </div>
   );
 }
