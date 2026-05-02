@@ -1,0 +1,16 @@
+name = "toss-tarot-gpt"
+main = "src/index.ts"
+compatibility_date = "2026-04-01"
+
+[vars]
+ALLOWED_ORIGINS = "*"
+DAILY_LIMIT = "5000"
+RATE_PER_MIN = "10"
+
+# OPENAI_API_KEY 는 코드/git 에 두지 않고 wrangler secret 으로 등록한다.
+#   wrangler secret put OPENAI_API_KEY
+
+# RATE_LIMIT_KV: 아래 id 는 'wrangler kv namespace create RATE_LIMIT_KV' 실행 후 채운다.
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "804d468c58b041009b4360e876b6eeb1"

@@ -1,0 +1,593 @@
+/* 토큰 기반: spacing 8px 스케일, radius tokens. Toss Look 준수. 모바일 뷰포트 맞춤 */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+:root {
+  font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+    system-ui, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  touch-action: pan-x pan-y;
+
+  /* tokens.ts와 동기화: spacing xxs~xxxxl, radius xs~full */
+  --spacing-xxs: 4px;
+  --spacing-xs: 8px;
+  --spacing-sm: 12px;
+  --spacing-md: 16px;
+  --spacing-lg: 20px;
+  --spacing-xl: 24px;
+  --spacing-xxl: 32px;
+  --spacing-xxxl: 40px;
+  --spacing-xxxxl: 48px;
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-xxl: 24px;
+  --radius-full: 9999px;
+  --layout-card-width: 224px;
+  --layout-card-height: 320px;
+  --touch-target-min: 44px;
+
+  --color-bg: #31213B;
+  --color-surface: rgba(49, 33, 59, 0.9);
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-text: #e8e6f0;
+  --color-text-muted: #b5b0bd;
+  --color-primary: #d4a853;
+  --color-primary-dim: #b8923f;
+  --bottom-nav-height: 56px;
+  /* WebView 실제 값은 useSafeAreaVars → --safe-area-inset-bottom-px 로 주입 */
+  --safe-bottom: var(--safe-area-inset-bottom-px, 0px);
+  /* 모바일 주소창 등 제외한 뷰포트 높이 */
+  --dvh: 100dvh;
+}
+
+html {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  padding-bottom: 0 !important;
+}
+
+body {
+  width: 100%;
+  min-height: var(--dvh);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  padding-bottom: 0 !important;
+  overflow-x: hidden;
+  background: #31213B;
+  color: var(--color-text);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+/* 진한 보라 배경: 모든 텍스트를 밝은 색으로 강제 (TDS 등 외부 스타일 덮어씀) */
+#root,
+#root .gradient-mystical,
+#root .gradient-mystical .layout-main,
+#root .gradient-mystical .layout-main *,
+#root .gradient-mystical .glass-card,
+#root .gradient-mystical .glass-card *,
+#root .gradient-mystical .page-state-container,
+#root .gradient-mystical .page-state-container * {
+  color: var(--color-text) !important;
+}
+#root .gradient-mystical .nav-link,
+#root .gradient-mystical .nav-link * {
+  color: inherit !important;
+}
+#root .gradient-mystical .nav-link.active,
+#root .gradient-mystical .nav-link.active * {
+  color: var(--color-primary) !important;
+}
+#root .gradient-mystical .nav-link,
+#root .gradient-mystical .nav-link *,
+#root .gradient-mystical .nav-link::before,
+#root .gradient-mystical .nav-link::after,
+#root .gradient-mystical a.nav-link {
+  text-decoration: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+/* Primary(금색) 버튼만 진한 글씨 유지 */
+#root .btn-primary,
+#root .gradient-mystical .btn-primary,
+#root .gradient-mystical button[class*="Primary"][class*="fill"],
+#root .gradient-mystical [class*="primary"][class*="fill"] {
+  color: var(--color-bg) !important;
+}
+#root .gradient-mystical button[class*="Primary"][class*="fill"] *,
+#root .gradient-mystical [class*="primary"][class*="fill"] * {
+  color: var(--color-bg) !important;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  min-height: var(--dvh);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  padding-bottom: 0 !important;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 유틸: glass 카드, 그라데이션 배경. 모바일에서 넘치지 않도록 */
+.glass-card {
+  background: var(--color-surface);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border);
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.gradient-mystical {
+  background: #31213B;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.text-gold {
+  color: var(--color-primary);
+}
+
+.safe-bottom {
+  padding-bottom: var(--safe-bottom);
+}
+
+button {
+  border: none;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  background: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Card reveal: 토큰 기반 (radius-lg 16px, spacing) */
+.card-perspective {
+  margin: 0 auto;
+  perspective: 1000px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 5 / 7;
+  height: auto;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-revealed {
+  transform: rotateY(180deg);
+}
+
+.card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: var(--radius-lg, 16px);
+  overflow: hidden;
+}
+
+.card-back {
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: var(--spacing-xl, 24px);
+}
+
+.card-back .card-back-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  pointer-events: none;
+}
+
+.card-back-pattern {
+  display: none;
+}
+
+.card-tap-hint {
+  position: relative;
+  z-index: 1;
+  font-size: 14px;
+  color: var(--color-text);
+  padding: var(--spacing-xs, 8px) var(--spacing-md, 16px);
+  border-radius: var(--radius-full, 9999px);
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.card-front {
+  transform: rotateY(180deg);
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.card-front-image-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xs, 8px);
+  background: var(--color-bg);
+}
+
+.card-front-img {
+  width: 100%;
+  height: 100%;
+  min-height: 120px;
+  object-fit: contain;
+  object-position: center;
+  flex-shrink: 0;
+}
+
+.card-front-emoji {
+  font-size: 64px;
+  line-height: 1;
+}
+
+.card-front-caption {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xxs, 4px);
+  padding: var(--spacing-sm, 12px) var(--spacing-md, 16px);
+}
+
+.card-emoji {
+  font-size: var(--spacing-xxxxl);
+  line-height: 1;
+}
+
+.card-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.card-subtitle {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.card-keywords {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--spacing-xs, 8px);
+}
+
+.card-keyword {
+  padding: var(--spacing-xxs) var(--spacing-sm);
+  font-size: 12px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text);
+}
+
+/* Layout: 메인 영역 스크롤 가능, 하단 네비 아래까지 스크롤 시 콘텐츠가 가려지지 않도록 padding */
+.layout-main {
+  width: 100%;
+  max-width: 100%;
+  min-height: 0;
+  flex: 1;
+  margin: 0;
+  padding: var(--spacing-md, 16px);
+  padding-bottom: calc(var(--bottom-nav-height) + var(--safe-bottom, 0px) + var(--spacing-lg, 20px));
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 홈: 스크롤 가능, 카드 뒷면 좌우 여백 최소화 */
+.page-home {
+  min-height: min-content;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  padding: var(--spacing-xs, 8px) var(--spacing-xxs, 4px);
+  gap: var(--spacing-xs, 8px);
+  padding-bottom: var(--spacing-xxl, 32px);
+}
+
+.page-home .page-home-header {
+  flex-shrink: 0;
+}
+
+.page-home .page-home-card {
+  flex-shrink: 0;
+}
+
+.page-home .page-home-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs, 8px);
+  flex: 1;
+  min-height: 0;
+}
+
+/* 하단 네비: 토스 미니앱 브랜딩 가이드 - 플로팅 형태 탭바 (전체 너비 고정 탭과 구분) */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  margin: 0;
+  padding: var(--spacing-sm) var(--spacing-md) calc(var(--safe-area-inset-bottom-px, 0px) + var(--spacing-sm));
+  padding-left: calc(env(safe-area-inset-left, 0px) + var(--spacing-md));
+  padding-right: calc(env(safe-area-inset-right, 0px) + var(--spacing-md));
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+.bottom-nav-inner {
+  pointer-events: auto;
+  width: 100%;
+  max-width: 360px;
+  min-height: var(--bottom-nav-height);
+  display: flex;
+  align-items: stretch;
+  box-sizing: border-box;
+  background: var(--color-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xxl);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+}
+
+.nav-link {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xxs);
+  min-width: 0;
+  min-height: var(--touch-target-min);
+  padding: var(--spacing-xs) var(--spacing-xxs);
+  box-sizing: border-box;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s;
+}
+
+.nav-link-label {
+  white-space: nowrap;
+}
+
+.nav-link.active {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: var(--color-bg);
+  font-weight: 600;
+  font-size: 14px;
+  padding: var(--spacing-sm, 12px) var(--spacing-lg, 20px);
+  border-radius: var(--radius-md, 12px);
+  transition: transform 0.1s, opacity 0.2s;
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text);
+  font-size: 14px;
+  padding: var(--spacing-sm, 12px) var(--spacing-lg, 20px);
+  border-radius: var(--radius-md, 12px);
+  border: 1px solid var(--color-border);
+}
+
+.section-card {
+  padding: var(--spacing-lg, 20px);
+  border-radius: var(--radius-xl, 20px);
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.caption-disclaimer {
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+  opacity: 0.8;
+  text-align: center;
+}
+
+/* 질문하기: 입력 영역을 카드 뽑기 버튼과 동일한 좌우 폭으로 */
+.ask-question-field {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.ask-question-field > *,
+.ask-question-field textarea,
+.ask-question-field [class*="TextArea"],
+.ask-question-field [class*="textarea"] {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+.layout-main .page-ask .ask-question-field,
+.layout-main .page-ask .ask-question-field > * {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.history-item-button {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: inherit;
+  font: inherit;
+  padding: var(--spacing-lg, 20px);
+  border-radius: var(--radius-xl, 20px);
+  transition: opacity 0.2s;
+}
+.history-item-button:active {
+  opacity: 0.9;
+}
+
+/* P1-04: 기록 화면 잠금 해제 뱃지 */
+.history-badge-unlocked {
+  flex-shrink: 0;
+  padding: var(--spacing-xxs) var(--spacing-sm);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-primary);
+  background: rgba(212, 168, 83, 0.15);
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+/* 카드 덱 픽: 78장 뒷면을 가로 스크롤로 펼쳐 한 장을 고르는 인터랙션.
+   토큰 동기화: width/height/marginLeft은 inline style(layoutPx)로 주입 */
+.card-deck-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  padding: var(--spacing-xl) var(--spacing-md) var(--spacing-md);
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+}
+.card-deck-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.card-deck-track {
+  display: flex;
+  width: max-content;
+  align-items: flex-end;
+  padding-right: var(--spacing-xl);
+}
+
+.card-deck-item {
+  flex-shrink: 0;
+  position: relative;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-bg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  padding: 0;
+  cursor: pointer;
+  transition:
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.25s,
+    z-index 0s 0.25s;
+}
+
+.card-deck-item.is-pending {
+  transform: translateY(-16px) scale(1.06);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55);
+  z-index: 2;
+  transition:
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.25s,
+    z-index 0s;
+}
+
+.card-deck-item.is-confirming {
+  transform: translateY(-32px) scale(1.1);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+  z-index: 3;
+}
+
+.card-deck-back-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+/* P0-02: 페이지 상태 공통 (Loading / Empty / Error) */
+.page-state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-xxl);
+  min-height: 120px;
+}
+
+.page-state-loading-spinner {
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: var(--radius-full);
+  animation: page-state-spin 0.8s linear infinite;
+}
+
+@keyframes page-state-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

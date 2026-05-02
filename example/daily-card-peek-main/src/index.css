@@ -1,0 +1,129 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 230 25% 7%;
+    --foreground: 220 20% 92%;
+
+    --card: 230 20% 12%;
+    --card-foreground: 220 20% 92%;
+
+    --popover: 230 20% 12%;
+    --popover-foreground: 220 20% 92%;
+
+    --primary: 45 80% 60%;
+    --primary-foreground: 230 25% 7%;
+
+    --secondary: 250 30% 25%;
+    --secondary-foreground: 220 20% 92%;
+
+    --muted: 230 15% 18%;
+    --muted-foreground: 220 15% 55%;
+
+    --accent: 270 40% 35%;
+    --accent-foreground: 220 20% 92%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 220 20% 92%;
+
+    --border: 230 15% 20%;
+    --input: 230 15% 20%;
+    --ring: 45 80% 60%;
+
+    --radius: 1rem;
+
+    --sidebar-background: 230 25% 7%;
+    --sidebar-foreground: 220 20% 92%;
+    --sidebar-primary: 45 80% 60%;
+    --sidebar-primary-foreground: 230 25% 7%;
+    --sidebar-accent: 250 30% 25%;
+    --sidebar-accent-foreground: 220 20% 92%;
+    --sidebar-border: 230 15% 20%;
+    --sidebar-ring: 45 80% 60%;
+
+    /* Custom tokens */
+    --gold: 45 80% 60%;
+    --gold-dim: 45 50% 40%;
+    --indigo-deep: 230 40% 15%;
+    --lavender: 270 30% 70%;
+    --surface-glass: 230 20% 12% / 0.8;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: -apple-system, 'Apple SD Gothic Neo', 'Pretendard', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    background: hsla(var(--surface-glass));
+    backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--border));
+  }
+
+  .gradient-mystical {
+    background: linear-gradient(
+      180deg,
+      hsl(230 40% 15%) 0%,
+      hsl(250 30% 10%) 50%,
+      hsl(230 25% 7%) 100%
+    );
+  }
+
+  .gradient-gold {
+    background: linear-gradient(
+      135deg,
+      hsl(45 80% 60%) 0%,
+      hsl(35 90% 50%) 100%
+    );
+  }
+
+  .text-gold {
+    color: hsl(var(--gold));
+  }
+
+  .text-lavender {
+    color: hsl(var(--lavender));
+  }
+
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsl(45 80% 60% / 0.15) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+  }
+}
