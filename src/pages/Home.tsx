@@ -3,11 +3,12 @@ import { Button, Paragraph, useToast } from '@toss/tds-mobile';
 import { useDailyCard } from '@/hooks/useDailyCard';
 import CardReveal from '@/components/CardReveal';
 import CardDeckPicker from '@/components/CardDeckPicker';
+import BannerAd from '@/components/BannerAd';
 import { buildDailyCardShareText, SHARE_MESSAGES, shareText } from '@/utils/share';
 import { spacingPx } from '@/design/tokens';
 
 export default function HomePage() {
-  const { card, hasPicked, revealed, revealCard, unlocked, unlock, today, pickCard } = useDailyCard();
+  const { card, hasPicked, revealed, revealCard, today, pickCard } = useDailyCard();
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -23,7 +24,6 @@ export default function HomePage() {
   };
 
   const goDetail = () => {
-    if (!unlocked) unlock();
     navigate('/detail');
   };
 
@@ -60,25 +60,30 @@ export default function HomePage() {
 
       <div className="page-home-content" style={{ width: '100%', paddingLeft: 0, paddingRight: 0 }}>
         {revealed ? (
-          <div className="glass-card section-card" style={{ width: '100%' }}>
-            <Paragraph typography="t6" style={{ margin: 0, lineHeight: 1.6 }}>
-              <Paragraph.Text>{card.shortReading}</Paragraph.Text>
-            </Paragraph>
-            <div style={{ marginTop: spacingPx('md'), display: 'flex', flexDirection: 'column', gap: spacingPx('xs') }}>
-              <Button
-                color="primary"
-                variant="fill"
-                display="block"
-                onClick={goDetail}
-                style={{ width: '100%' }}
-              >
-                {unlocked ? '상세 해석 보기' : '광고 보고 상세 해석 보기'}
-              </Button>
-              <Button color="dark" variant="weak" display="block" onClick={handleShare} aria-label="결과 공유" style={{ width: '100%' }}>
-                공유
-              </Button>
+          <>
+            <div className="glass-card section-card" style={{ width: '100%' }}>
+              <Paragraph typography="t6" style={{ margin: 0, lineHeight: 1.6 }}>
+                <Paragraph.Text>{card.shortReading}</Paragraph.Text>
+              </Paragraph>
+              <div style={{ marginTop: spacingPx('md'), display: 'flex', flexDirection: 'column', gap: spacingPx('xs') }}>
+                <Button
+                  color="primary"
+                  variant="fill"
+                  display="block"
+                  onClick={goDetail}
+                  style={{ width: '100%' }}
+                >
+                  상세 해석 보기
+                </Button>
+                <Button color="dark" variant="weak" display="block" onClick={handleShare} aria-label="결과 공유" style={{ width: '100%' }}>
+                  공유
+                </Button>
+              </div>
             </div>
-          </div>
+            <div style={{ width: '100%', marginTop: spacingPx('lg') }}>
+              <BannerAd />
+            </div>
+          </>
         ) : (
           <Paragraph typography="t7" style={{ margin: 0, textAlign: 'center' }}>
             <Paragraph.Text color="gray">카드를 탭해 오늘의 메시지를 확인하세요.</Paragraph.Text>

@@ -89,7 +89,7 @@ export default function SettingsPage() {
             <Paragraph.Text color="gray">타로</Paragraph.Text>
           </Paragraph>
           <Paragraph typography="t7" style={{ margin: `${spacingPx('xxs')} 0 0` }}>
-            <Paragraph.Text color="gray">버전 1.0.3</Paragraph.Text>
+            <Paragraph.Text color="gray">버전 1.1.0</Paragraph.Text>
           </Paragraph>
         </div>
 

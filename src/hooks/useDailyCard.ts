@@ -4,10 +4,8 @@ import { getTodayString } from '@/utils/dailyCard';
 import { tarotCards } from '@/utils/tarotData';
 import {
   getDailyPickedCardId,
-  isUnlockedToday,
   saveDailyPickedCardId,
   saveToHistory,
-  unlockToday,
 } from '@/utils/storage';
 
 /**
@@ -20,13 +18,11 @@ export function useDailyCard() {
     getDailyPickedCardId(today)
   );
   const [revealed, setRevealed] = useState(() => getDailyPickedCardId(today) != null);
-  const [unlocked, setUnlocked] = useState(() => isUnlockedToday(today));
 
   useEffect(() => {
     const saved = getDailyPickedCardId(today);
     setPickedCardId(saved);
     setRevealed(saved != null);
-    setUnlocked(isUnlockedToday(today));
   }, [today]);
 
   const card: TarotCard | null =
@@ -41,27 +37,17 @@ export function useDailyCard() {
     saveToHistory({
       date: today,
       cardId: chosen.id,
-      unlocked: isUnlockedToday(today),
+      unlocked: true,
     });
   };
 
   const revealCard = () => setRevealed(true);
-
-  const unlock = () => {
-    unlockToday(today);
-    setUnlocked(true);
-    if (card) {
-      saveToHistory({ date: today, cardId: card.id, unlocked: true });
-    }
-  };
 
   return {
     card,
     hasPicked: pickedCardId != null,
     revealed,
     revealCard,
-    unlocked,
-    unlock,
     today,
     pickCard,
   };
