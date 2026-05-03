@@ -4,6 +4,7 @@ import { useDailyCard } from '@/hooks/useDailyCard';
 import CardReveal from '@/components/CardReveal';
 import CardDeckPicker from '@/components/CardDeckPicker';
 import BannerAd from '@/components/BannerAd';
+import ConsultEntryCard from '@/components/ConsultEntryCard';
 import { buildDailyCardShareText, SHARE_MESSAGES, shareText } from '@/utils/share';
 import { spacingPx } from '@/design/tokens';
 
@@ -30,6 +31,9 @@ export default function HomePage() {
   if (!hasPicked || card == null) {
     return (
       <div className="page-home">
+        <div style={{ width: '100%', marginBottom: spacingPx('lg') }}>
+          <ConsultEntryCard />
+        </div>
         <header className="page-home-header" style={{ textAlign: 'center' }}>
           <Paragraph typography="t7" style={{ margin: 0 }}>
             <Paragraph.Text color="gray">{today}</Paragraph.Text>
@@ -45,6 +49,10 @@ export default function HomePage() {
 
   return (
     <div className="page-home">
+      <div style={{ width: '100%', marginBottom: spacingPx('lg') }}>
+        <ConsultEntryCard />
+      </div>
+
       <header className="page-home-header" style={{ textAlign: 'center' }}>
         <Paragraph typography="t7" style={{ margin: 0 }}>
           <Paragraph.Text color="gray">{today}</Paragraph.Text>
