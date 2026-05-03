@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button, Paragraph } from '@toss/tds-mobile';
 import PageStateView from '@/components/PageStateView';
@@ -84,7 +84,12 @@ export default function ConsultDetailPage() {
           </header>
 
           {session.turns.map((turn, i) => (
-            <SessionTurnBlock key={i} turn={turn} index={i} />
+            <SessionTurnBlock
+              key={i}
+              turn={turn}
+              index={i}
+              defaultExpanded={i === session.turns.length - 1}
+            />
           ))}
 
           {session.closingMessage && (
@@ -113,7 +118,25 @@ export default function ConsultDetailPage() {
   );
 }
 
-function SessionTurnBlock({ turn, index }: { turn: ConsultSessionTurn; index: number }) {
+function SessionTurnBlock({
+  turn,
+  index,
+  defaultExpanded,
+}: {
+  turn: ConsultSessionTurn;
+  index: number;
+  defaultExpanded: boolean;
+}) {
+  const [expanded, setExpanded] = useState(defaultExpanded);
+  const cardNamesPreview = useMemo(
+    () =>
+      turn.cards
+        .map((c) => lookupCard(c.id)?.nameKo ?? '')
+        .filter(Boolean)
+        .join(', '),
+    [turn.cards]
+  );
+
   return (
     <section
       aria-label={`${index + 1}번째 질문`}
@@ -127,68 +150,110 @@ function SessionTurnBlock({ turn, index }: { turn: ConsultSessionTurn; index: nu
         background: 'rgba(255,255,255,0.04)',
       }}
     >
-      <Paragraph typography="t7" style={{ margin: 0 }}>
-        <Paragraph.Text color="gray" fontWeight="bold">
-          {index + 1}번째 질문
-        </Paragraph.Text>
-      </Paragraph>
-
-      <div className="glass-card section-card" style={{ width: '100%' }}>
-        <Paragraph typography="t6" style={{ margin: 0, lineHeight: 1.6 }}>
-          <Paragraph.Text>"{turn.question}"</Paragraph.Text>
-        </Paragraph>
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: spacingPx('xs'), width: '100%' }}>
-        {turn.cards.map((c, i) => {
-          const card = lookupCard(c.id);
-          if (!card) return null;
-          const meaning = turn.cardMeanings[i]?.meaning;
-          return (
-            <div
-              key={`${c.id}-${i}`}
-              className="glass-card"
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: spacingPx('sm'),
-                padding: spacingPx('md'),
-                borderRadius: spacingPx('md'),
-                width: '100%',
-              }}
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: spacingPx('xs'),
+          background: 'transparent',
+          border: 'none',
+          padding: 0,
+          textAlign: 'left',
+          cursor: 'pointer',
+        }}
+      >
+        <span style={{ flex: 1, minWidth: 0 }}>
+          <Paragraph typography="t7" style={{ margin: 0 }}>
+            <Paragraph.Text color="gray" fontWeight="bold">
+              {index + 1}번째 질문 · 카드 {turn.cards.length}장
+            </Paragraph.Text>
+          </Paragraph>
+          {!expanded && (
+            <Paragraph
+              typography="t7"
+              style={{ marginTop: spacingPx('xxs'), marginBottom: 0, lineHeight: 1.5 }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: spacingPx('md') }}>
-                <CardThumb card={card} size={48} emojiFontSize={spacingPx('xxl')} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <Paragraph typography="t7" style={{ margin: 0 }}>
-                    <Paragraph.Text color="gray" fontWeight="bold">{c.position}</Paragraph.Text>
-                  </Paragraph>
-                  <Paragraph typography="t6" style={{ marginTop: spacingPx('xxs'), marginBottom: 0 }}>
-                    <Paragraph.Text fontWeight="bold">{card.nameKo}</Paragraph.Text>
-                  </Paragraph>
-                </div>
-              </div>
-              {meaning && (
-                <Paragraph typography="t7" style={{ margin: 0, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
-                  <Paragraph.Text>{meaning}</Paragraph.Text>
-                </Paragraph>
-              )}
-            </div>
-          );
-        })}
-      </div>
+              <Paragraph.Text>
+                "{turn.question.length > 28 ? turn.question.slice(0, 28) + '…' : turn.question}"
+              </Paragraph.Text>
+            </Paragraph>
+          )}
+          {!expanded && cardNamesPreview && (
+            <Paragraph typography="t7" style={{ marginTop: spacingPx('xxs'), marginBottom: 0 }}>
+              <Paragraph.Text color="gray">{cardNamesPreview}</Paragraph.Text>
+            </Paragraph>
+          )}
+        </span>
+        <span aria-hidden style={{ opacity: 0.6, marginLeft: spacingPx('xs') }}>
+          {expanded ? '▴' : '▾'}
+        </span>
+      </button>
 
-      <div className="glass-card section-card" style={{ width: '100%' }}>
-        <Paragraph typography="t7" style={{ margin: 0 }}>
-          <Paragraph.Text color="gray" fontWeight="bold">종합 해석</Paragraph.Text>
-        </Paragraph>
-        <Paragraph
-          typography="t6"
-          style={{ marginTop: spacingPx('xs'), marginBottom: 0, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}
-        >
-          <Paragraph.Text>{turn.summary}</Paragraph.Text>
-        </Paragraph>
-      </div>
+      {expanded && (
+        <>
+          <div className="glass-card section-card" style={{ width: '100%' }}>
+            <Paragraph typography="t6" style={{ margin: 0, lineHeight: 1.6 }}>
+              <Paragraph.Text>"{turn.question}"</Paragraph.Text>
+            </Paragraph>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: spacingPx('xs'), width: '100%' }}>
+            {turn.cards.map((c, i) => {
+              const card = lookupCard(c.id);
+              if (!card) return null;
+              const meaning = turn.cardMeanings[i]?.meaning;
+              return (
+                <div
+                  key={`${c.id}-${i}`}
+                  className="glass-card"
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: spacingPx('sm'),
+                    padding: spacingPx('md'),
+                    borderRadius: spacingPx('md'),
+                    width: '100%',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: spacingPx('md') }}>
+                    <CardThumb card={card} size={48} emojiFontSize={spacingPx('xxl')} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <Paragraph typography="t7" style={{ margin: 0 }}>
+                        <Paragraph.Text color="gray" fontWeight="bold">{c.position}</Paragraph.Text>
+                      </Paragraph>
+                      <Paragraph typography="t6" style={{ marginTop: spacingPx('xxs'), marginBottom: 0 }}>
+                        <Paragraph.Text fontWeight="bold">{card.nameKo}</Paragraph.Text>
+                      </Paragraph>
+                    </div>
+                  </div>
+                  {meaning && (
+                    <Paragraph typography="t7" style={{ margin: 0, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                      <Paragraph.Text>{meaning}</Paragraph.Text>
+                    </Paragraph>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="glass-card section-card" style={{ width: '100%' }}>
+            <Paragraph typography="t7" style={{ margin: 0 }}>
+              <Paragraph.Text color="gray" fontWeight="bold">종합 해석</Paragraph.Text>
+            </Paragraph>
+            <Paragraph
+              typography="t6"
+              style={{ marginTop: spacingPx('xs'), marginBottom: 0, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}
+            >
+              <Paragraph.Text>{turn.summary}</Paragraph.Text>
+            </Paragraph>
+          </div>
+        </>
+      )}
     </section>
   );
 }
