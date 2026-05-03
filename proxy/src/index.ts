@@ -11,9 +11,25 @@ export interface Env {
   DAILY_LIMIT: string;
   RATE_PER_MIN: string;
   RATE_LIMIT_KV: KVNamespace;
+  /**
+   * 선택: Cloudflare AI Gateway 베이스 URL.
+   * 형식 예: https://gateway.ai.cloudflare.com/v1/<ACCOUNT_TAG>/<GATEWAY_ID>/openai
+   * 설정되어 있으면 OpenAI 직접 호출 대신 게이트웨이 경유 → CF 중앙 네트워크에서
+   * 호출되므로 egress IP가 차단 리전이 되는 문제(unsupported_country_region_territory) 해소.
+   * 비어 있으면 기존처럼 OpenAI 직접 호출.
+   */
+  AI_GATEWAY_BASE?: string;
 }
 
-const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
+const DEFAULT_OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
+
+function resolveUpstreamUrl(env: Env): string {
+  const url = (env.AI_GATEWAY_BASE ?? '').trim();
+  if (!url) return DEFAULT_OPENAI_URL;
+  // 끝까지 포함한 전체 URL을 넣었을 수도, 베이스만 넣었을 수도 있음 — 둘 다 처리
+  if (url.endsWith('/chat/completions')) return url;
+  return `${url.replace(/\/$/, '')}/chat/completions`;
+}
 
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
@@ -55,8 +71,9 @@ export default {
     ]);
 
     const body = await req.text();
+    const upstreamUrl = resolveUpstreamUrl(env);
 
-    const upstream = await fetch(OPENAI_URL, {
+    const upstream = await fetch(upstreamUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -64,6 +81,19 @@ export default {
       },
       body,
     });
+
+    if (!upstream.ok) {
+      try {
+        const errBody = await upstream.clone().text();
+        console.log('upstream_error', {
+          status: upstream.status,
+          upstreamUrl,
+          body: errBody.slice(0, 800),
+        });
+      } catch {
+        console.log('upstream_error', { status: upstream.status, upstreamUrl, body: '<read failed>' });
+      }
+    }
 
     return new Response(upstream.body, {
       status: upstream.status,

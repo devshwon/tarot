@@ -7,6 +7,12 @@ ALLOWED_ORIGINS = "*"
 DAILY_LIMIT = "5000"
 RATE_PER_MIN = "10"
 
+# Cloudflare AI Gateway URL.
+# 우리는 OpenAI 그대로 forward만 하므로 compat 대신 openai 전용 endpoint를 쓴다
+# (compat은 body model에 'openai/' prefix가 필요해 추가 변환이 들어감).
+# 비워두면 OpenAI 직접 호출 (콜로 따라 unsupported_country 차단 가능).
+AI_GATEWAY_BASE = "https://gateway.ai.cloudflare.com/v1/74c6efa4583992cb20102cb11237861e/toss-tarot/openai"
+
 # OPENAI_API_KEY 는 코드/git 에 두지 않고 wrangler secret 으로 등록한다.
 #   wrangler secret put OPENAI_API_KEY
 

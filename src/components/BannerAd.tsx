@@ -21,7 +21,7 @@ type TossAdsModule = {
 
 function useTossBanner() {
   const [isInitialized, setIsInitialized] = useState(false);
-  const tossAdsRef = useRef<TossAdsModule['TossAds']>(null);
+  const tossAdsRef = useRef<TossAdsModule['TossAds'] | null>(null);
 
   useEffect(() => {
     import('@apps-in-toss/web-framework')
