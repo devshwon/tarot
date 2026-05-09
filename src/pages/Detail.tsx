@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Button, Paragraph } from '@toss/tds-mobile';
+import { Button, Paragraph, useToast } from '@toss/tds-mobile';
 import { useDailyCard } from '@/hooks/useDailyCard';
 import PageStateView from '@/components/PageStateView';
 import CardThumb from '@/components/CardThumb';
@@ -8,9 +8,10 @@ import BannerAd from '@/components/BannerAd';
 import { spacingPx } from '@/design/tokens';
 import type { PageState } from '@/types/pageState';
 import type { TarotCard } from '@/types/tarot';
-import { GptTarotService } from '@/services/gptTarot';
+import { GptTarotService, SERVICE_UNAVAILABLE_MESSAGE } from '@/services/gptTarot';
 import { AdService } from '@/services/adService';
 import { getHistory, getShareRewardCount, updateHistoryGptDetail, useShareRewardCredit } from '@/utils/storage';
+import { buildDailyCardShareText, SHARE_MESSAGES, shareText } from '@/utils/share';
 
 type DetailLocationState = { fromHistory?: true; card: TarotCard; date: string; question?: string | null } | null;
 
@@ -31,10 +32,48 @@ export default function DetailPage() {
     return entry?.gptDetail ?? null;
   });
   const [gptLoading, setGptLoading] = useState(false);
+  const [gptError, setGptError] = useState(false);
   const [shareRewardCount, setShareRewardCount] = useState(getShareRewardCount);
+  const toast = useToast();
   const mountedRef = useRef(true);
   const activeCtrlRef = useRef<AbortController | null>(null);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleShare = async () => {
+    if (!card) return;
+    const text = buildDailyCardShareText(card);
+    const result = await shareText(text);
+    if (result.success) {
+      toast.openToast(result.method === 'share' ? SHARE_MESSAGES.successShare : SHARE_MESSAGES.successCopy);
+    } else {
+      toast.openToast(result.method === 'share' ? SHARE_MESSAGES.failShare : SHARE_MESSAGES.failCopy);
+    }
+  };
+
+  const runGptFetch = () => {
+    if (!card || gptLoading) return;
+    setGptError(false);
+    setGptLoading(true);
+    const ctrl = new AbortController();
+    activeCtrlRef.current = ctrl;
+    GptTarotService.getTarotInterpretation(card, detailQuestion ?? undefined, ctrl.signal)
+      .then((text) => {
+        if (!mountedRef.current) return;
+        if (text === SERVICE_UNAVAILABLE_MESSAGE) {
+          setGptError(true);
+          return;
+        }
+        setGptDetail(text);
+        updateHistoryGptDetail(detailDate, text, detailQuestion);
+      })
+      .catch((e) => {
+        if (e instanceof DOMException && e.name === 'AbortError') return;
+        if (mountedRef.current) setGptError(true);
+      })
+      .finally(() => {
+        if (mountedRef.current) setGptLoading(false);
+      });
+  };
 
   useEffect(() => {
     return () => {
@@ -152,6 +191,15 @@ export default function DetailPage() {
               <Paragraph.Text color="gray">카드와 질문을 바탕으로 해석하고 있어요…</Paragraph.Text>
             </Paragraph>
           </div>
+        ) : gptError ? (
+          <div className="glass-card section-card" style={{ display: 'flex', flexDirection: 'column', gap: spacingPx('sm') }}>
+            <Paragraph typography="t7" style={{ margin: 0, textAlign: 'center' }}>
+              <Paragraph.Text color="gray">{SERVICE_UNAVAILABLE_MESSAGE}</Paragraph.Text>
+            </Paragraph>
+            <Button color="primary" variant="fill" display="block" style={{ width: '100%' }} onClick={runGptFetch}>
+              다시 시도
+            </Button>
+          </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: spacingPx('xs'), width: '100%' }}>
             {shareRewardCount > 0 && (
@@ -164,13 +212,7 @@ export default function DetailPage() {
                   if (!card || gptLoading) return;
                   if (!useShareRewardCredit()) return;
                   setShareRewardCount(getShareRewardCount());
-                  setGptLoading(true);
-                  GptTarotService.getTarotInterpretation(card, detailQuestion ?? undefined)
-                    .then((text) => {
-                      setGptDetail(text);
-                      updateHistoryGptDetail(detailDate, text, detailQuestion);
-                    })
-                    .finally(() => setGptLoading(false));
+                  runGptFetch();
                 }}
               >
                 해석권 1개 사용하고 보기 ({shareRewardCount}개 보유)
@@ -201,11 +243,15 @@ export default function DetailPage() {
                   try {
                     const text = await fetchPromise;
                     if (!isAlive()) return;
+                    if (text === SERVICE_UNAVAILABLE_MESSAGE) {
+                      setGptError(true);
+                      return;
+                    }
                     setGptDetail(text);
                     updateHistoryGptDetail(detailDate, text, detailQuestion);
                   } catch (e) {
                     if (e instanceof DOMException && e.name === 'AbortError') return;
-                    throw e;
+                    if (isAlive()) setGptError(true);
                   } finally {
                     if (isAlive()) setGptLoading(false);
                   }
@@ -249,6 +295,11 @@ export default function DetailPage() {
           </div>
         )
       ) : null}
+
+      {/* 6. 공유 */}
+      <Button color="dark" variant="weak" display="block" onClick={handleShare} aria-label="결과 공유" style={{ width: '100%' }}>
+        공유
+      </Button>
 
       <Paragraph typography="t7" style={{ textAlign: 'center' }}>
         <Paragraph.Text color="gray">오락 목적이며, 결정의 근거로 사용할 수 없습니다. 면책 조항은 설정에서 확인할 수 있습니다.</Paragraph.Text>
