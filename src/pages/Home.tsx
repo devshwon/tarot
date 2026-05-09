@@ -1,32 +1,30 @@
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Paragraph, useToast } from '@toss/tds-mobile';
+import { Paragraph } from '@toss/tds-mobile';
 import { useDailyCard } from '@/hooks/useDailyCard';
 import CardReveal from '@/components/CardReveal';
 import CardDeckPicker from '@/components/CardDeckPicker';
-import BannerAd from '@/components/BannerAd';
 import ConsultEntryCard from '@/components/ConsultEntryCard';
-import { buildDailyCardShareText, SHARE_MESSAGES, shareText } from '@/utils/share';
 import { spacingPx } from '@/design/tokens';
+
+const PICK_TRANSITION_MS = 700;
 
 export default function HomePage() {
   const { card, hasPicked, revealed, revealCard, today, pickCard } = useDailyCard();
   const navigate = useNavigate();
-  const toast = useToast();
+  const initialHasPickedRef = useRef(hasPicked);
 
-  const handleShare = async () => {
-    if (!card) return;
-    const text = buildDailyCardShareText(card);
-    const result = await shareText(text);
-    if (result.success) {
-      toast.openToast(result.method === 'share' ? SHARE_MESSAGES.successShare : SHARE_MESSAGES.successCopy);
-    } else {
-      toast.openToast(result.method === 'share' ? SHARE_MESSAGES.failShare : SHARE_MESSAGES.failCopy);
-    }
-  };
-
-  const goDetail = () => {
-    navigate('/detail');
-  };
+  /**
+   * 픽한 카드가 있으면 항상 /detail 로 이동.
+   * - 첫 마운트 시 이미 픽된 상태(다른 화면 갔다가 복귀): 즉시 이동
+   * - 이번 세션에서 새로 픽한 경우: 잠깐 카드 보여 주고 이동
+   */
+  useEffect(() => {
+    if (!hasPicked || !card) return;
+    const delay = initialHasPickedRef.current ? 0 : PICK_TRANSITION_MS;
+    const t = window.setTimeout(() => navigate('/detail', { replace: true }), delay);
+    return () => window.clearTimeout(t);
+  }, [hasPicked, card, navigate]);
 
   if (!hasPicked || card == null) {
     return (
@@ -47,56 +45,11 @@ export default function HomePage() {
     );
   }
 
+  /* 이미 픽된 상태에서 마운트 → 위 useEffect 가 즉시 /detail 로 보냄. 그 사이 빈 화면 방지용 카드 표시 */
   return (
     <div className="page-home">
-      <div style={{ width: '100%', marginBottom: spacingPx('lg') }}>
-        <ConsultEntryCard />
-      </div>
-
-      <header className="page-home-header" style={{ textAlign: 'center' }}>
-        <Paragraph typography="t7" style={{ margin: 0 }}>
-          <Paragraph.Text color="gray">{today}</Paragraph.Text>
-        </Paragraph>
-        <Paragraph typography="t4" style={{ margin: `${spacingPx('xxs')} 0 0` }}>
-          <Paragraph.Text fontWeight="bold">오늘의 카드</Paragraph.Text>
-        </Paragraph>
-      </header>
-
       <div className="page-home-card">
         <CardReveal card={card} revealed={revealed} onReveal={revealCard} />
-      </div>
-
-      <div className="page-home-content" style={{ width: '100%', paddingLeft: 0, paddingRight: 0 }}>
-        {revealed ? (
-          <>
-            <div className="glass-card section-card" style={{ width: '100%' }}>
-              <Paragraph typography="t6" style={{ margin: 0, lineHeight: 1.6 }}>
-                <Paragraph.Text>{card.shortReading}</Paragraph.Text>
-              </Paragraph>
-              <div style={{ marginTop: spacingPx('md'), display: 'flex', flexDirection: 'column', gap: spacingPx('xs') }}>
-                <Button
-                  color="primary"
-                  variant="fill"
-                  display="block"
-                  onClick={goDetail}
-                  style={{ width: '100%' }}
-                >
-                  상세 해석 보기
-                </Button>
-                <Button color="dark" variant="weak" display="block" onClick={handleShare} aria-label="결과 공유" style={{ width: '100%' }}>
-                  공유
-                </Button>
-              </div>
-            </div>
-            <div style={{ width: '100%', marginTop: spacingPx('lg') }}>
-              <BannerAd />
-            </div>
-          </>
-        ) : (
-          <Paragraph typography="t7" style={{ margin: 0, textAlign: 'center' }}>
-            <Paragraph.Text color="gray">카드를 탭해 오늘의 메시지를 확인하세요.</Paragraph.Text>
-          </Paragraph>
-        )}
       </div>
     </div>
   );

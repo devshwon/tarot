@@ -8,7 +8,7 @@ import type { TarotCard } from '@/types/tarot';
 const GPT_PROXY_BASE = (import.meta.env.VITE_GPT_PROXY ?? '').replace(/\/$/, '');
 const BASE_URL = GPT_PROXY_BASE ? `${GPT_PROXY_BASE}/v1/chat/completions` : '';
 
-const SERVICE_UNAVAILABLE_MESSAGE =
+export const SERVICE_UNAVAILABLE_MESSAGE =
   'AI 해석을 일시적으로 사용할 수 없어요. 네트워크를 확인하거나 잠시 후 다시 시도해 주세요.';
 
 /** OpenAI Chat Completions에서 일반적으로 사용하는 경제 모델(환경변수 미설정 시 기본). */
@@ -138,8 +138,7 @@ export const GptTarotService = {
             { role: 'system' as const, content: systemContent },
             { role: 'user' as const, content: userContent },
           ],
-          max_tokens: 800,
-          temperature: 0.7,
+          max_completion_tokens: 1500,
         }),
         signal,
       });
