@@ -5,6 +5,7 @@ import { useDailyCard } from '@/hooks/useDailyCard';
 import PageStateView from '@/components/PageStateView';
 import CardThumb from '@/components/CardThumb';
 import BannerAd from '@/components/BannerAd';
+import ConsultEntryCard from '@/components/ConsultEntryCard';
 import { spacingPx } from '@/design/tokens';
 import type { PageState } from '@/types/pageState';
 import type { TarotCard } from '@/types/tarot';
@@ -120,6 +121,9 @@ export default function DetailPage() {
   /* 카드 정보 → 상세 해석 → 조언 → 행운 정보 → 추가 해석(광고 시청 시) */
   return (
     <div className="detail-unlocked" style={{ display: 'flex', flexDirection: 'column', gap: spacingPx('lg') }}>
+      {/* 0. 타로 상담 진입 */}
+      <ConsultEntryCard />
+
       {/* 1. 카드 정보 */}
       <div className="glass-card section-card" style={{ display: 'flex', alignItems: 'center', gap: spacingPx('md') }}>
         <CardThumb card={card} size={80} emojiFontSize={spacingPx('xxxxl')} />
